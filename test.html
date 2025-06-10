@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cricket Quiz</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom styles for better aesthetics and responsiveness */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f2f5; /* Light gray background */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh; /* Full viewport height */
+            margin: 0;
+            padding: 20px; /* Add some padding around the content */
+            box-sizing: border-box; /* Include padding in element's total width and height */
+        }
+        .quiz-container {
+            background-color: #ffffff; /* White background for the quiz card */
+            border-radius: 1.5rem; /* More rounded corners */
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1); /* Soft shadow */
+            padding: 2.5rem; /* Increased padding */
+            max-width: 600px; /* Max width for larger screens */
+            width: 100%; /* Full width on smaller screens */
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem; /* Space between elements */
+        }
+        .question-text {
+            font-size: 1.75rem; /* Larger font size for questions */
+            font-weight: 700; /* Bold text */
+            color: #1a202c; /* Dark text color */
+            margin-bottom: 1.5rem;
+        }
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr; /* Single column on mobile */
+            gap: 1rem; /* Space between option buttons */
+        }
+        @media (min-width: 640px) { /* Small screens and up */
+            .options-grid {
+                grid-template-columns: repeat(2, 1fr); /* Two columns on larger screens */
+            }
+        }
+        .option-button {
+            background-color: #e2e8f0; /* Light gray for unselected options */
+            color: #2d3748; /* Darker text */
+            padding: 1rem 1.5rem; /* Ample padding */
+            border-radius: 0.75rem; /* Rounded corners for buttons */
+            font-size: 1.125rem; /* Slightly larger font */
+            font-weight: 600; /* Semi-bold */
+            cursor: pointer;
+            transition: all 0.2s ease-in-out; /* Smooth transition for hover/focus */
+            border: 2px solid transparent; /* Transparent border for selection highlight */
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05); /* Subtle shadow */
+        }
+        .option-button:hover {
+            background-color: #cbd5e0; /* Slightly darker on hover */
+        }
+        .option-button.selected {
+            background-color: #4299e1; /* Blue for selected option */
+            color: #ffffff; /* White text for selected option */
+            border-color: #2b6cb0; /* Darker blue border */
+            box-shadow: 0 6px 12px rgba(66, 153, 225, 0.3); /* More prominent shadow */
+        }
+        .action-button {
+            background-image: linear-gradient(to right, #4299e1, #63b3ed); /* Gradient blue */
+            color: #ffffff;
+            padding: 1rem 2rem;
+            border-radius: 0.75rem;
+            font-size: 1.25rem; /* Larger font for action buttons */
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+            border: none;
+            box-shadow: 0 8px 15px rgba(66, 153, 225, 0.4); /* Stronger shadow */
+        }
+        .action-button:hover {
+            background-image: linear-gradient(to right, #3182ce, #4299e1); /* Darker gradient on hover */
+            transform: translateY(-2px); /* Slight lift effect */
+        }
+        .score-display {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #2d3748;
+            margin-top: 1rem;
+        }
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div id="start-screen" class="quiz-container">
+        <h1 class="text-3xl font-bold text-gray-800 mb-4">Welcome to the Cricket Quiz!</h1>
+        <p class="text-lg text-gray-600 mb-6">Test your knowledge of the gentleman's game.</p>
+        <button id="start-quiz-btn" class="action-button">Start Quiz</button>
+    </div>
+
+    <div id="quiz-screen" class="quiz-container hidden">
+        <div class="question-text" id="question-text"></div>
+        <div class="options-grid" id="options-container">
+            </div>
+        <button id="submit-answer-btn" class="action-button mt-4">Submit Answer</button>
+    </div>
+
+    <div id="result-screen" class="quiz-container hidden">
+        <h2 class="text-3xl font-bold text-gray-800 mb-4">Quiz Completed!</h2>
+        <p class="score-display mb-6">Your Score: <span id="final-score">0</span> out of <span id="total-questions">0</span></p>
+        <button id="restart-quiz-btn" class="action-button">Play Again</button>
+    </div>
+
+    <script>
+        // Array of quiz questions
+        const quizQuestions = [
+            {
+                question: "Which country won the first Cricket World Cup in 1975?",
+                options: ["Australia", "England", "West Indies", "India"],
+                correctAnswer: 2 // Index of 'West Indies'
+            },
+            {
+                question: "Who is known as the 'God of Cricket'?",
+                options: ["Virat Kohli", "Ricky Ponting", "Sachin Tendulkar", "Brian Lara"],
+                correctAnswer: 2 // Index of 'Sachin Tendulkar'
+            },
+            {
+                question: "How many overs are there in a standard One Day International (ODI) match?",
+                options: ["20", "40", "50", "60"],
+                correctAnswer: 2 // Index of '50'
+            },
+            {
+                question: "What is the term for a batsman scoring 100 runs in an innings?",
+                options: ["Half-century", "Century", "Double Century", "Hat-trick"],
+                correctAnswer: 1 // Index of 'Century'
+            },
+            {
+                question: "Which bowler has taken the most wickets in Test cricket history?",
+                options: ["Shane Warne", "Muttiah Muralitharan", "Anil Kumble", "James Anderson"],
+                correctAnswer: 1 // Index of 'Muttiah Muralitharan'
+            },
+            {
+                question: "What is the maximum number of players a fielding side can have on the field at any one time?",
+                options: ["9", "10", "11", "12"],
+                correctAnswer: 2 // Index of '11'
+            },
+            {
+                question: "Which ground is known as the 'Home of Cricket'?",
+                options: ["Eden Gardens", "Melbourne Cricket Ground", "Lord's", "The Oval"],
+                correctAnswer: 2 // Index of 'Lord's'
+            },
+            {
+                question: "What is a 'googly' in cricket?",
+                options: ["A type of fielding position", "A fast delivery", "A deceptive leg-spin delivery", "A type of wicket"],
+                correctAnswer: 2 // Index of 'A deceptive leg-spin delivery'
+            },
+            {
+                question: "Who was the first player to score a double century in Men's ODI cricket?",
+                options: ["Rohit Sharma", "Virender Sehwag", "Chris Gayle", "Sachin Tendulkar"],
+                correctAnswer: 3 // Index of 'Sachin Tendulkar'
+            },
+            {
+                question: "How many stumps are there in a wicket?",
+                options: ["2", "3", "4", "5"],
+                correctAnswer: 1 // Index of '3'
+            }
+        ];
+
+        // Quiz state variables
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let selectedAnswer = null; // To store the index of the currently selected answer
+
+        // Get DOM elements
+        const startScreen = document.getElementById('start-screen');
+        const quizScreen = document.getElementById('quiz-screen');
+        const resultScreen = document.getElementById('result-screen');
+
+        const startQuizBtn = document.getElementById('start-quiz-btn');
+        const questionText = document.getElementById('question-text');
+        const optionsContainer = document.getElementById('options-container');
+        const submitAnswerBtn = document.getElementById('submit-answer-btn');
+
+        const finalScoreSpan = document.getElementById('final-score');
+        const totalQuestionsSpan = document.getElementById('total-questions');
+        const restartQuizBtn = document.getElementById('restart-quiz-btn');
+
+        /**
+         * Initializes the quiz, hides the start screen, and displays the first question.
+         */
+        function startQuiz() {
+            startScreen.classList.add('hidden'); // Hide start screen
+            quizScreen.classList.remove('hidden'); // Show quiz screen
+            currentQuestionIndex = 0; // Reset question index
+            score = 0; // Reset score
+            loadQuestion(); // Load the first question
+        }
+
+        /**
+         * Loads and displays the current question and its options.
+         */
+        function loadQuestion() {
+            selectedAnswer = null; // Reset selected answer for the new question
+            submitAnswerBtn.disabled = true; // Disable submit button until an option is selected
+            submitAnswerBtn.classList.add('opacity-50', 'cursor-not-allowed'); // Visually indicate disabled state
+
+            const currentQuestion = quizQuestions[currentQuestionIndex];
+            questionText.textContent = currentQuestion.question; // Set question text
+
+            optionsContainer.innerHTML = ''; // Clear previous options
+
+            // Create buttons for each option
+            currentQuestion.options.forEach((option, index) => {
+                const button = document.createElement('button');
+                button.textContent = option;
+                button.classList.add('option-button');
+                button.dataset.index = index; // Store the index of the option
+                button.addEventListener('click', () => selectAnswer(index, button)); // Add click listener
+                optionsContainer.appendChild(button);
+            });
+        }
+
+        /**
+         * Handles the selection of an answer option.
+         * @param {number} index - The index of the selected answer.
+         * @param {HTMLElement} clickedButton - The button element that was clicked.
+         */
+        function selectAnswer(index, clickedButton) {
+            // Remove 'selected' class from all options first
+            document.querySelectorAll('.option-button').forEach(btn => {
+                btn.classList.remove('selected');
+            });
+
+            // Add 'selected' class to the clicked button
+            clickedButton.classList.add('selected');
+            selectedAnswer = index; // Store the selected answer's index
+
+            // Enable the submit button once an answer is selected
+            submitAnswerBtn.disabled = false;
+            submitAnswerBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+        }
+
+        /**
+         * Submits the selected answer, checks if it's correct, updates the score,
+         * and proceeds to the next question or ends the quiz.
+         */
+        function submitAnswer() {
+            if (selectedAnswer === null) {
+                // This case should ideally not happen if the button is disabled, but good for robustness
+                console.log("Please select an answer before submitting.");
+                return;
+            }
+
+            const currentQuestion = quizQuestions[currentQuestionIndex];
+            if (selectedAnswer === currentQuestion.correctAnswer) {
+                score++; // Increment score if correct
+            }
+
+            currentQuestionIndex++; // Move to the next question
+
+            if (currentQuestionIndex < quizQuestions.length) {
+                loadQuestion(); // Load next question
+            } else {
+                endQuiz(); // End quiz if all questions are answered
+            }
+        }
+
+        /**
+         * Displays the final score and the option to restart the quiz.
+         */
+        function endQuiz() {
+            quizScreen.classList.add('hidden'); // Hide quiz screen
+            resultScreen.classList.remove('hidden'); // Show result screen
+            finalScoreSpan.textContent = score; // Display final score
+            totalQuestionsSpan.textContent = quizQuestions.length; // Display total questions
+        }
+
+        /**
+         * Resets the quiz and starts it again.
+         */
+        function restartQuiz() {
+            resultScreen.classList.add('hidden'); // Hide result screen
+            startQuiz(); // Go back to the start of the quiz
+        }
+
+        // Event Listeners
+        startQuizBtn.addEventListener('click', startQuiz);
+        submitAnswerBtn.addEventListener('click', submitAnswer);
+        restartQuizBtn.addEventListener('click', restartQuiz);
+
+        // Initial setup: Ensure only the start screen is visible on load
+        document.addEventListener('DOMContentLoaded', () => {
+            startScreen.classList.remove('hidden');
+            quizScreen.classList.add('hidden');
+            resultScreen.classList.add('hidden');
+        });
+    </script>
+</body>
+</html>
